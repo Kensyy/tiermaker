@@ -8,6 +8,7 @@ import { useBoardStore } from "../state/useBoardStore";
 import { Navbar } from "../components/layout/Navbar";
 import { BoardCanvas } from "../components/board/BoardCanvas";
 import { PresenceBar } from "../components/board/PresenceBar";
+import { LibrarySidebar } from "../components/library/LibrarySidebar";
 import type { DragData } from "../components/board/dndTypes";
 
 function resolveDropTarget(overData: DragData): { tierId: number; index: number } | null {
@@ -84,7 +85,17 @@ export function BoardPage() {
     const target = resolveDropTarget(overData);
     if (!target) return;
 
-    if (activeData.kind === "item") {
+    if (activeData.kind === "image") {
+      // The board store only learns about images at hydration time; register
+      // this one now so TierItemCard can render it as soon as the server echoes back.
+      useBoardStore.getState().addImage(activeData.image);
+      socket.emit("item:place", {
+        boardId,
+        tierId: target.tierId,
+        imageId: activeData.image.id,
+        index: target.index,
+      });
+    } else if (activeData.kind === "item") {
       socket.emit("item:move", {
         boardId,
         itemId: activeData.item.id,
@@ -104,6 +115,7 @@ export function BoardPage() {
       <DndContext onDragEnd={handleDragEnd}>
         <div className="flex flex-1 overflow-hidden">
           <BoardCanvas />
+          <LibrarySidebar />
         </div>
       </DndContext>
     </div>
