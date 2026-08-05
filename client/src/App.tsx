@@ -1,7 +1,9 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { SocketProvider } from "./context/SocketContext";
 import { LoginPage } from "./pages/LoginPage";
 import { LobbyPage } from "./pages/LobbyPage";
+import { BoardPage } from "./pages/BoardPage";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -27,6 +29,14 @@ function Routed() {
           </RequireAuth>
         }
       />
+      <Route
+        path="/boards/:boardId"
+        element={
+          <RequireAuth>
+            <BoardPage />
+          </RequireAuth>
+        }
+      />
     </Routes>
   );
 }
@@ -35,7 +45,9 @@ export function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Routed />
+        <SocketProvider>
+          <Routed />
+        </SocketProvider>
       </AuthProvider>
     </BrowserRouter>
   );
