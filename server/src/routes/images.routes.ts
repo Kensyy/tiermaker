@@ -32,7 +32,7 @@ imagesRouter.post(
       originalName: req.file.originalname,
       mimeType: req.file.mimetype,
       sizeBytes: req.file.size,
-      uploadedBy: req.session.userId!,
+      uploadedBy: req.userId!,
     });
     res.status(201).json(image);
   }),

@@ -54,14 +54,15 @@ The client and server deploy separately, since the server needs a persistent pro
 **Server** — any host that gives you a long-running Node process and a persistent volume works: [Railway](https://railway.app), [Render](https://render.com), [Fly.io](https://fly.io), or a small VPS.
 - Start command: `npm run start -w server` (run from the repo root, so npm workspaces resolve `@tiermaker/shared`).
 - Mount a persistent volume over the server workspace's `data/` directory (where `DATABASE_PATH`/`UPLOAD_DIR` default to) — otherwise boards and uploads reset on every deploy.
-- Env vars: `SESSION_SECRET` (long random string), `CLIENT_ORIGIN` (the client's deployed URL), `PORT` (most hosts set this for you).
+- Env vars: `CLIENT_ORIGIN` (the client's deployed URL, no trailing slash), `PORT` (most hosts set this for you).
 - Migrations apply automatically on boot (see `server/src/index.ts`) — no separate migration step needed after the first deploy.
 
 **Client** — [Vercel](https://vercel.com) is a natural fit for the Vite build:
 - Root Directory: `client` (Vercel detects the npm workspace and installs from the repo root automatically).
 - Env var: `VITE_API_URL` set to the server's public URL — the client uses this to reach the API, uploaded images, and the Socket.io connection (see `client/src/lib/api.ts`).
+- `client/vercel.json` rewrites all paths to `index.html`, so direct navigation/refresh on a client-side route (e.g. `/login`) doesn't 404 against Vercel's static file server.
 
-Because the two are on different domains in this setup, the session cookie needs `SameSite=None; Secure` — already handled in `server/src/session.ts`, gated on `NODE_ENV=production`.
+Auth is a bearer token, not a cookie, specifically so this split works: a client on one domain and a server on another can't reliably share cookies — browsers increasingly block cross-site cookies outright regardless of `SameSite`/`Secure` (Safari and Firefox by default, Chrome trending the same way). The client stores the token in `localStorage` and sends it as `Authorization: Bearer <token>` (REST) or `handshake.auth.token` (Socket.io) instead. See `server/src/services/tokenService.ts` and `client/src/lib/api.ts`.
 
 ## Scripts
 
@@ -76,5 +77,5 @@ Because the two are on different domains in this setup, the session cookie needs
 
 ## Notes on scope
 
-- **Sessions are in-memory**, not persisted to the database — a server restart logs everyone out, but all board/user/image data is untouched. This is a deliberate tradeoff for a small friends-scale deployment; swapping in a persistent session store later is a small, isolated change (`server/src/session.ts`).
+- **Auth tokens are in-memory**, not persisted to the database — a server restart logs everyone out, but all board/user/image data is untouched. This is a deliberate tradeoff for a small friends-scale deployment; swapping in a persistent token store later is a small, isolated change (`server/src/services/tokenService.ts`).
 - Auth is intentionally minimal: a display name plus a passcode, hashed with bcrypt. There's no account recovery — it's meant for a trusted group of friends, not a public app.

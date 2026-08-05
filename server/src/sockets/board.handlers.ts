@@ -1,11 +1,8 @@
-import type { Server } from "socket.io";
-import type { ClientToServerEvents, PresenceUser, ServerToClientEvents } from "@tiermaker/shared";
+import type { PresenceUser } from "@tiermaker/shared";
 import { colorForUser } from "../services/userService.js";
 import { moveItem, placeItem, removeItem } from "../services/tierItemService.js";
 import { getImage } from "../services/imageService.js";
-import type { AppSocket } from "./index.js";
-
-type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
+import type { AppIO, AppSocket } from "./index.js";
 
 const roomName = (boardId: number) => `board:${boardId}`;
 
@@ -13,12 +10,11 @@ const roomName = (boardId: number) => `board:${boardId}`;
 const presenceByBoard = new Map<number, Map<string, PresenceUser>>();
 
 function presenceUserFor(socket: AppSocket): PresenceUser {
-  const userId = socket.request.session.userId!;
-  const displayName = socket.request.session.displayName!;
+  const { userId, displayName } = socket.data;
   return { userId, displayName, color: colorForUser(userId) };
 }
 
-function leaveBoard(io: AppServer, socket: AppSocket, boardId: number) {
+function leaveBoard(io: AppIO, socket: AppSocket, boardId: number) {
   socket.leave(roomName(boardId));
   const presence = presenceByBoard.get(boardId);
   const user = presence?.get(socket.id);
@@ -29,7 +25,7 @@ function leaveBoard(io: AppServer, socket: AppSocket, boardId: number) {
   }
 }
 
-export function registerBoardHandlers(io: AppServer, socket: AppSocket) {
+export function registerBoardHandlers(io: AppIO, socket: AppSocket) {
   socket.on("board:join", ({ boardId }) => {
     socket.join(roomName(boardId));
 
@@ -48,7 +44,7 @@ export function registerBoardHandlers(io: AppServer, socket: AppSocket) {
 
   socket.on("item:place", async ({ boardId, tierId, imageId, index }) => {
     try {
-      const item = await placeItem({ boardId, tierId, imageId, index, placedBy: socket.request.session.userId! });
+      const item = await placeItem({ boardId, tierId, imageId, index, placedBy: socket.data.userId });
       const image = await getImage(item.imageId);
       if (image) io.to(roomName(boardId)).emit("item:placed", { item, image });
     } catch {
@@ -58,7 +54,7 @@ export function registerBoardHandlers(io: AppServer, socket: AppSocket) {
 
   socket.on("item:move", async ({ boardId, itemId, toTierId, index }) => {
     try {
-      const item = await moveItem({ itemId, toTierId, index, placedBy: socket.request.session.userId! });
+      const item = await moveItem({ itemId, toTierId, index, placedBy: socket.data.userId });
       if (!item) return;
       const image = await getImage(item.imageId);
       if (image) io.to(roomName(boardId)).emit("item:moved", { item, image });
@@ -75,7 +71,7 @@ export function registerBoardHandlers(io: AppServer, socket: AppSocket) {
           itemId,
           tierId: removed.tierId,
           imageId: removed.imageId,
-          removedBy: socket.request.session.userId!,
+          removedBy: socket.data.userId,
         });
       }
     } catch {

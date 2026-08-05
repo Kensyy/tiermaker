@@ -1,8 +1,10 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import { asyncHandler } from "../middleware/asyncHandler.js";
+import { requireAuth } from "../middleware/requireAuth.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import { createUser, findUserByDisplayName, findUserById } from "../services/userService.js";
+import { issueToken, revokeToken } from "../services/tokenService.js";
 
 const DISPLAY_NAME_PATTERN = /^[a-zA-Z0-9 _-]{2,24}$/;
 
@@ -30,34 +32,29 @@ authRouter.post(
       if (!valid) {
         throw new HttpError(401, "Incorrect passcode for that name");
       }
-      req.session.userId = existing.id;
-      req.session.displayName = existing.displayName;
-      res.json({ id: existing.id, displayName: existing.displayName });
+      const token = issueToken({ userId: existing.id, displayName: existing.displayName });
+      res.json({ id: existing.id, displayName: existing.displayName, token });
       return;
     }
 
     const passcodeHash = await bcrypt.hash(passcode, 10);
     const created = await createUser(displayName, passcodeHash);
-    req.session.userId = created.id;
-    req.session.displayName = created.displayName;
-    res.status(201).json({ id: created.id, displayName: created.displayName });
+    const token = issueToken({ userId: created.id, displayName: created.displayName });
+    res.status(201).json({ id: created.id, displayName: created.displayName, token });
   }),
 );
 
-authRouter.post("/logout", (req, res) => {
-  req.session.destroy(() => {
-    res.status(204).end();
-  });
+authRouter.post("/logout", requireAuth, (req, res) => {
+  const token = req.headers.authorization!.slice("Bearer ".length);
+  revokeToken(token);
+  res.status(204).end();
 });
 
 authRouter.get(
   "/me",
+  requireAuth,
   asyncHandler(async (req, res) => {
-    if (!req.session.userId) {
-      res.status(401).json({ message: "Not authenticated" });
-      return;
-    }
-    const user = await findUserById(req.session.userId);
+    const user = await findUserById(req.userId!);
     if (!user) {
       res.status(401).json({ message: "Not authenticated" });
       return;

@@ -1,9 +1,13 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { api, ApiError } from "../lib/api";
+import { api, ApiError, getAuthToken, setAuthToken } from "../lib/api";
 
 interface AuthUser {
   id: number;
   displayName: string;
+}
+
+interface LoginResponse extends AuthUser {
+  token: string;
 }
 
 interface AuthContextValue {
@@ -20,22 +24,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!getAuthToken()) {
+      setLoading(false);
+      return;
+    }
     api
       .get<AuthUser>("/auth/me")
       .then(setUser)
       .catch((err) => {
-        if (!(err instanceof ApiError && err.status === 401)) console.error(err);
+        if (err instanceof ApiError && err.status === 401) setAuthToken(null);
+        else console.error(err);
       })
       .finally(() => setLoading(false));
   }, []);
 
   async function login(displayName: string, passcode: string) {
-    const loggedInUser = await api.post<AuthUser>("/auth/login", { displayName, passcode });
+    const { token, ...loggedInUser } = await api.post<LoginResponse>("/auth/login", { displayName, passcode });
+    setAuthToken(token);
     setUser(loggedInUser);
   }
 
   async function logout() {
     await api.post("/auth/logout");
+    setAuthToken(null);
     setUser(null);
   }
 

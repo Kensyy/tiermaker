@@ -24,7 +24,7 @@ boardsRouter.post(
     if (!name || !name.trim()) {
       throw new HttpError(400, "name is required");
     }
-    const board = await createBoard(name.trim(), req.session.userId!);
+    const board = await createBoard(name.trim(), req.userId!);
     res.status(201).json(board);
   }),
 );

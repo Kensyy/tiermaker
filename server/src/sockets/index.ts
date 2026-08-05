@@ -2,40 +2,32 @@ import type { Server as HttpServer } from "node:http";
 import { Server, type Socket } from "socket.io";
 import type { ClientToServerEvents, ServerToClientEvents } from "@tiermaker/shared";
 import { env } from "../env.js";
-import { sessionMiddleware } from "../session.js";
+import { verifyToken, type TokenInfo } from "../services/tokenService.js";
 import { registerBoardHandlers } from "./board.handlers.js";
 import { registerCursorHandlers } from "./cursor.handlers.js";
 
-export type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
-export type AppIO = Server<ClientToServerEvents, ServerToClientEvents>;
+export type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents, object, TokenInfo>;
+export type AppIO = Server<ClientToServerEvents, ServerToClientEvents, object, TokenInfo>;
 
 /** Reads the socket server that `index.ts` attaches to the Express app via `app.set("io", io)`. */
 export function getIo(app: { get(name: string): unknown }): AppIO {
   return app.get("io") as AppIO;
 }
 
-declare module "node:http" {
-  interface IncomingMessage {
-    session: import("express-session").Session & Partial<import("express-session").SessionData>;
-  }
-}
-
 export function createSocketServer(httpServer: HttpServer) {
-  const io = new Server<ClientToServerEvents, ServerToClientEvents>(httpServer, {
-    cors: { origin: env.clientOrigin, credentials: true },
+  const io: AppIO = new Server(httpServer, {
+    cors: { origin: env.clientOrigin },
   });
 
-  // Reuse the same express-session middleware so each socket can read
-  // socket.request.session.userId — this is how we know who is dragging
-  // items or moving a cursor, without a separate auth handshake.
-  io.engine.use(sessionMiddleware);
-
+  // Auth is a bearer token (sent as handshake.auth.token), not a cookie —
+  // see server/src/services/tokenService.ts for why.
   io.use((socket, next) => {
-    const userId = socket.request.session?.userId;
-    if (!userId) {
+    const info = verifyToken(socket.handshake.auth?.token);
+    if (!info) {
       next(new Error("Not authenticated"));
       return;
     }
+    socket.data = info;
     next();
   });
 

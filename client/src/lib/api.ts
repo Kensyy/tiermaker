@@ -8,6 +8,24 @@ export function resolveAssetUrl(path: string): string {
   return `${API_BASE_URL}${path}`;
 }
 
+const TOKEN_STORAGE_KEY = "tiermaker.authToken";
+
+// Auth is a bearer token, not a cookie — the client and server are deployed
+// on separate domains, and browsers increasingly block cross-site cookies
+// regardless of SameSite/Secure. Kept in localStorage so a page refresh
+// doesn't force a re-login.
+let authToken: string | null = localStorage.getItem(TOKEN_STORAGE_KEY);
+
+export function getAuthToken(): string | null {
+  return authToken;
+}
+
+export function setAuthToken(token: string | null): void {
+  authToken = token;
+  if (token) localStorage.setItem(TOKEN_STORAGE_KEY, token);
+  else localStorage.removeItem(TOKEN_STORAGE_KEY);
+}
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);
@@ -15,11 +33,11 @@ export class ApiError extends Error {
 }
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}/api${path}`, {
-    credentials: "include",
-    headers: typeof init?.body === "string" ? { "Content-Type": "application/json" } : undefined,
-    ...init,
-  });
+  const headers: Record<string, string> = {};
+  if (typeof init?.body === "string") headers["Content-Type"] = "application/json";
+  if (authToken) headers["Authorization"] = `Bearer ${authToken}`;
+
+  const res = await fetch(`${API_BASE_URL}/api${path}`, { headers, ...init });
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({ message: res.statusText }));
