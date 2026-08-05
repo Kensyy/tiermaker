@@ -8,6 +8,9 @@ A real-time, collaborative tier-list maker. Create a board, upload images into f
 - **Live collaboration** — item placement, movement, and removal sync instantly across everyone viewing a board, via WebSockets.
 - **Live cursors** — see where everyone else's mouse is on the board in real time, Figma-style.
 - **Image library** — upload images, organized into a shared folder tree with nested subfolders.
+- **Editable tiers** — rename a tier, recolor it, add new tiers, or delete one (and its placements).
+- **Activity toasts** — see "Bob moved pepperoni.png to S" pop up when someone else acts on the board.
+- **Export as PNG** — download the current board as an image to share outside the app.
 - **Persistence** — boards, tiers, placements, folders, and images all survive a server restart (SQLite).
 - **Lightweight auth** — pick a display name and passcode; no email, no password reset flow, just enough to attribute who placed what.
 
@@ -43,6 +46,22 @@ shared/    TypeScript types and Socket.io event contracts shared by both
 ```
 
 See `server/src/db/schema.ts` for the data model and `server/src/sockets/` for the realtime event handlers.
+
+## Deployment
+
+The client and server deploy separately, since the server needs a persistent process and disk (SQLite, uploads, in-memory presence) that serverless platforms don't provide.
+
+**Server** — any host that gives you a long-running Node process and a persistent volume works: [Railway](https://railway.app), [Render](https://render.com), [Fly.io](https://fly.io), or a small VPS.
+- Start command: `npm run start -w server` (run from the repo root, so npm workspaces resolve `@tiermaker/shared`).
+- Mount a persistent volume over the server workspace's `data/` directory (where `DATABASE_PATH`/`UPLOAD_DIR` default to) — otherwise boards and uploads reset on every deploy.
+- Env vars: `SESSION_SECRET` (long random string), `CLIENT_ORIGIN` (the client's deployed URL), `PORT` (most hosts set this for you).
+- Migrations apply automatically on boot (see `server/src/index.ts`) — no separate migration step needed after the first deploy.
+
+**Client** — [Vercel](https://vercel.com) is a natural fit for the Vite build:
+- Root Directory: `client` (Vercel detects the npm workspace and installs from the repo root automatically).
+- Env var: `VITE_API_URL` set to the server's public URL — the client uses this to reach the API, uploaded images, and the Socket.io connection (see `client/src/lib/api.ts`).
+
+Because the two are on different domains in this setup, the session cookie needs `SameSite=None; Secure` — already handled in `server/src/session.ts`, gated on `NODE_ENV=production`.
 
 ## Scripts
 

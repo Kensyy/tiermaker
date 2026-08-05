@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import type { ImageAsset } from "@tiermaker/shared";
-import { api } from "../../lib/api";
+import { api, resolveAssetUrl } from "../../lib/api";
 
 function LibraryThumbnail({ image }: { image: ImageAsset }) {
   const draggable = useDraggable({ id: `image-${image.id}`, data: { kind: "image", image } });
@@ -15,7 +15,12 @@ function LibraryThumbnail({ image }: { image: ImageAsset }) {
       {...draggable.listeners}
       {...draggable.attributes}
     >
-      <img src={image.url} alt={image.originalName} className="h-full w-full rounded-md object-cover" draggable={false} />
+      <img
+        src={resolveAssetUrl(image.url)}
+        alt={image.originalName}
+        className="h-full w-full rounded-md object-cover"
+        draggable={false}
+      />
     </div>
   );
 }

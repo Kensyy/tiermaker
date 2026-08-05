@@ -1,5 +1,6 @@
 import { useDraggable, useDroppable } from "@dnd-kit/core";
 import type { ImageAsset, TierItem } from "@tiermaker/shared";
+import { resolveAssetUrl } from "../../lib/api";
 
 interface TierItemCardProps {
   item: TierItem;
@@ -25,7 +26,7 @@ export function TierItemCard({ item, image, onRemove }: TierItemCardProps) {
     >
       {image && (
         <img
-          src={image.url}
+          src={resolveAssetUrl(image.url)}
           alt={image.originalName}
           className="h-full w-full rounded-md object-cover"
           draggable={false}

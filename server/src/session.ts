@@ -11,7 +11,11 @@ export const sessionMiddleware = session({
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    sameSite: "lax",
+    // In dev, client and server share an origin via the Vite proxy, so "lax"
+    // is enough. In production they're on different domains (e.g. a Vercel
+    // client + a Railway server), which requires "none" — and browsers only
+    // honor SameSite=None on cookies marked Secure, so the two go together.
+    sameSite: env.isProduction ? "none" : "lax",
     secure: env.isProduction,
     maxAge: 30 * 24 * 60 * 60 * 1000,
   },
