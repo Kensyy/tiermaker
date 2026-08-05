@@ -1,0 +1,23 @@
+node_modules/
+dist/
+build/
+
+# server runtime data
+server/src/data/
+server/src/uploads/
+server/data/
+server/uploads/
+
+# env
+.env
+.env.local
+
+# logs
+*.log
+npm-debug.log*
+
+# editor/os
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
