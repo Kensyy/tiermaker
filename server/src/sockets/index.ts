@@ -4,6 +4,7 @@ import type { ClientToServerEvents, ServerToClientEvents } from "@tiermaker/shar
 import { env } from "../env.js";
 import { sessionMiddleware } from "../session.js";
 import { registerBoardHandlers } from "./board.handlers.js";
+import { registerCursorHandlers } from "./cursor.handlers.js";
 
 export type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
 
@@ -34,6 +35,7 @@ export function createSocketServer(httpServer: HttpServer) {
 
   io.on("connection", (socket: AppSocket) => {
     registerBoardHandlers(io, socket);
+    registerCursorHandlers(io, socket);
   });
 
   return io;
