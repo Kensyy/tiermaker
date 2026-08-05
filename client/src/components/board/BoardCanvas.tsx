@@ -1,15 +1,20 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import { useBoardStore } from "../../state/useBoardStore";
 import { useSocket } from "../../context/SocketContext";
 import { throttle } from "../../lib/throttle";
 import { TierRow } from "./TierRow";
 import { CursorsOverlay } from "./CursorsOverlay";
 
-export function BoardCanvas() {
+interface BoardCanvasProps {
+  /** Exposes the board's root node so BoardPage can export it as an image. */
+  exportRef: RefObject<HTMLDivElement>;
+}
+
+export function BoardCanvas({ exportRef }: BoardCanvasProps) {
   const socket = useSocket();
   const boardId = useBoardStore((state) => state.boardId);
   const tiers = useBoardStore((state) => state.tiers);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = exportRef;
 
   // The throttled callback is only created once, so it must read the socket
   // through a ref rather than closing over it directly — otherwise it would

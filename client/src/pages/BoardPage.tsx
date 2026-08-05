@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
+import { toPng } from "html-to-image";
 import type { BoardHydration, ImageAsset, PresenceUser, TierItemBroadcast } from "@tiermaker/shared";
 import { api } from "../lib/api";
 import { useAuth } from "../context/AuthContext";
@@ -14,6 +15,7 @@ import { PresenceBar } from "../components/board/PresenceBar";
 import { DragPreview } from "../components/board/DragPreview";
 import { ToastStack } from "../components/board/ToastStack";
 import { LibrarySidebar } from "../components/library/LibrarySidebar";
+import { Button } from "../components/ui/Button";
 import type { DragData } from "../components/board/dndTypes";
 
 function describeAction(
@@ -67,6 +69,8 @@ export function BoardPage() {
 
   const [presence, setPresence] = useState<PresenceUser[]>([]);
   const [activeDragImage, setActiveDragImage] = useState<ImageAsset | undefined>(undefined);
+  const [exporting, setExporting] = useState(false);
+  const boardCanvasRef = useRef<HTMLDivElement>(null);
 
   // Socket listeners below are only registered once per socket/board, so they
   // must read presence through a ref rather than closing over the state
@@ -175,16 +179,50 @@ export function BoardPage() {
     }
   }
 
+  async function handleExport() {
+    const node = boardCanvasRef.current;
+    if (!node || exporting) return;
+
+    setExporting(true);
+    // Temporarily un-clip the scroll container so the export captures every
+    // tier row, not just whatever currently fits in the viewport.
+    const prevHeight = node.style.height;
+    const prevOverflow = node.style.overflowY;
+    node.style.height = `${node.scrollHeight}px`;
+    node.style.overflowY = "visible";
+
+    try {
+      const dataUrl = await toPng(node, {
+        backgroundColor: "#05060a",
+        pixelRatio: 2,
+        filter: (el) => !(el instanceof HTMLElement && "exportIgnore" in el.dataset),
+      });
+      const link = document.createElement("a");
+      link.download = `${board?.name ?? "tiermaker"}.png`;
+      link.href = dataUrl;
+      link.click();
+    } finally {
+      node.style.height = prevHeight;
+      node.style.overflowY = prevOverflow;
+      setExporting(false);
+    }
+  }
+
   return (
     <div className="flex h-screen flex-col">
       <Navbar />
       <div className="glass flex items-center justify-between px-4 py-2">
         <h1 className="font-mono text-sm text-neon-muted">{board?.name ?? "Loading…"}</h1>
-        <PresenceBar users={presence} />
+        <div className="flex items-center gap-3">
+          <PresenceBar users={presence} />
+          <Button variant="secondary" onClick={handleExport} disabled={exporting} className="py-1.5">
+            {exporting ? "Exporting…" : "Export PNG"}
+          </Button>
+        </div>
       </div>
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setActiveDragImage(undefined)}>
         <div className="flex flex-1 overflow-hidden">
-          <BoardCanvas />
+          <BoardCanvas exportRef={boardCanvasRef} />
           <LibrarySidebar />
         </div>
         <DragOverlay>

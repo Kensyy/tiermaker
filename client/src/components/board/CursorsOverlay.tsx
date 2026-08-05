@@ -4,7 +4,7 @@ export function CursorsOverlay() {
   const cursors = useCursorStore((state) => state.cursorsByUserId);
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden">
+    <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden" data-export-ignore>
       {Object.values(cursors).map((cursor) => (
         <div
           key={cursor.userId}
