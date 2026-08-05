@@ -2,6 +2,10 @@ import { Router } from "express";
 import { asyncHandler } from "../middleware/asyncHandler.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import { createBoard, getBoardHydration, listBoards } from "../services/boardService.js";
+import { createTier } from "../services/tierService.js";
+import { getIo } from "../sockets/index.js";
+
+const DEFAULT_NEW_TIER_COLOR = "#4cf3ff";
 
 export const boardsRouter = Router();
 
@@ -34,5 +38,19 @@ boardsRouter.get(
       throw new HttpError(404, "Board not found");
     }
     res.json(hydration);
+  }),
+);
+
+boardsRouter.post(
+  "/:boardId/tiers",
+  asyncHandler(async (req, res) => {
+    const boardId = Number(req.params.boardId);
+    const { label, color } = req.body as { label?: string; color?: string };
+    if (!label || !label.trim()) {
+      throw new HttpError(400, "label is required");
+    }
+    const tier = await createTier(boardId, label.trim(), color ?? DEFAULT_NEW_TIER_COLOR);
+    getIo(req.app).to(`board:${boardId}`).emit("tier:added", tier);
+    res.status(201).json(tier);
   }),
 );

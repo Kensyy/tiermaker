@@ -60,6 +60,8 @@ export function BoardPage() {
   const upsertItem = useBoardStore((state) => state.upsertItem);
   const removeItemLocal = useBoardStore((state) => state.removeItem);
   const addImage = useBoardStore((state) => state.addImage);
+  const upsertTier = useBoardStore((state) => state.upsertTier);
+  const removeTierLocal = useBoardStore((state) => state.removeTier);
 
   const addToast = useToastStore((state) => state.addToast);
 
@@ -119,6 +121,9 @@ export function BoardPage() {
       setPresence((prev) => prev.filter((u) => u.userId !== leftUser.userId));
     const onCursorMoved = setCursor;
     const onCursorLeft = ({ userId }: { userId: number }) => removeCursor(userId);
+    const onTierAdded = upsertTier;
+    const onTierUpdated = upsertTier;
+    const onTierRemoved = ({ tierId }: { tierId: number }) => removeTierLocal(tierId);
 
     socket.on("item:placed", onPlaced);
     socket.on("item:moved", onMoved);
@@ -128,6 +133,9 @@ export function BoardPage() {
     socket.on("user:left", onUserLeft);
     socket.on("cursor:moved", onCursorMoved);
     socket.on("cursor:left", onCursorLeft);
+    socket.on("tier:added", onTierAdded);
+    socket.on("tier:updated", onTierUpdated);
+    socket.on("tier:removed", onTierRemoved);
 
     return () => {
       socket.emit("board:leave", { boardId });
@@ -139,8 +147,23 @@ export function BoardPage() {
       socket.off("user:left", onUserLeft);
       socket.off("cursor:moved", onCursorMoved);
       socket.off("cursor:left", onCursorLeft);
+      socket.off("tier:added", onTierAdded);
+      socket.off("tier:updated", onTierUpdated);
+      socket.off("tier:removed", onTierRemoved);
     };
-  }, [socket, boardId, upsertItem, removeItemLocal, addImage, addToast, user?.id, setCursor, removeCursor]);
+  }, [
+    socket,
+    boardId,
+    upsertItem,
+    removeItemLocal,
+    addImage,
+    addToast,
+    user?.id,
+    setCursor,
+    removeCursor,
+    upsertTier,
+    removeTierLocal,
+  ]);
 
   function handleDragStart(event: DragStartEvent) {
     const data = event.active.data.current as DragData | undefined;

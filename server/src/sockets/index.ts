@@ -7,6 +7,12 @@ import { registerBoardHandlers } from "./board.handlers.js";
 import { registerCursorHandlers } from "./cursor.handlers.js";
 
 export type AppSocket = Socket<ClientToServerEvents, ServerToClientEvents>;
+export type AppIO = Server<ClientToServerEvents, ServerToClientEvents>;
+
+/** Reads the socket server that `index.ts` attaches to the Express app via `app.set("io", io)`. */
+export function getIo(app: { get(name: string): unknown }): AppIO {
+  return app.get("io") as AppIO;
+}
 
 declare module "node:http" {
   interface IncomingMessage {

@@ -13,6 +13,8 @@ interface BoardState {
   removeItem: (itemId: number) => void;
   addImage: (image: ImageAsset) => void;
   itemsForTier: (tierId: number) => TierItem[];
+  upsertTier: (tier: Tier) => void;
+  removeTier: (tierId: number) => void;
 }
 
 export const useBoardStore = create<BoardState>((set, get) => ({
@@ -47,4 +49,12 @@ export const useBoardStore = create<BoardState>((set, get) => ({
     Object.values(get().itemsById)
       .filter((item) => item.tierId === tierId)
       .sort((a, b) => a.position - b.position),
+
+  upsertTier: (tier) =>
+    set((state) => {
+      const withoutExisting = state.tiers.filter((t) => t.id !== tier.id);
+      return { tiers: [...withoutExisting, tier].sort((a, b) => a.position - b.position) };
+    }),
+
+  removeTier: (tierId) => set((state) => ({ tiers: state.tiers.filter((t) => t.id !== tierId) })),
 }));

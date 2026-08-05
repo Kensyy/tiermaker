@@ -39,7 +39,9 @@ export interface ServerToClientEvents {
   "item:placed": (payload: TierItemBroadcast) => void;
   "item:moved": (payload: TierItemBroadcast) => void;
   "item:removed": (payload: { itemId: number; tierId: number; imageId: number; removedBy: number }) => void;
+  "tier:added": (tier: Tier) => void;
   "tier:updated": (tier: Tier) => void;
+  "tier:removed": (payload: { tierId: number }) => void;
   "cursor:moved": (cursor: CursorPosition) => void;
   "cursor:left": (payload: { userId: number }) => void;
   "error": (payload: { message: string }) => void;

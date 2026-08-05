@@ -4,6 +4,7 @@ import { useSocket } from "../../context/SocketContext";
 import { throttle } from "../../lib/throttle";
 import { TierRow } from "./TierRow";
 import { CursorsOverlay } from "./CursorsOverlay";
+import { AddTierRow } from "./AddTierRow";
 
 interface BoardCanvasProps {
   /** Exposes the board's root node so BoardPage can export it as an image. */
@@ -48,6 +49,11 @@ export function BoardCanvas({ exportRef }: BoardCanvasProps) {
             }}
           />
         ))}
+        {boardId && (
+          <div data-export-ignore>
+            <AddTierRow boardId={boardId} />
+          </div>
+        )}
       </div>
       <CursorsOverlay />
     </div>
