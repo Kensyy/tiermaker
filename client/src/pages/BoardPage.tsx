@@ -1,17 +1,36 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
-import type { BoardHydration, ImageAsset, PresenceUser, TierItem } from "@tiermaker/shared";
+import type { BoardHydration, ImageAsset, PresenceUser, TierItemBroadcast } from "@tiermaker/shared";
 import { api } from "../lib/api";
+import { useAuth } from "../context/AuthContext";
 import { useSocket } from "../context/SocketContext";
 import { useBoardStore } from "../state/useBoardStore";
 import { useCursorStore } from "../state/useCursorStore";
+import { useToastStore } from "../state/useToastStore";
 import { Navbar } from "../components/layout/Navbar";
 import { BoardCanvas } from "../components/board/BoardCanvas";
 import { PresenceBar } from "../components/board/PresenceBar";
 import { DragPreview } from "../components/board/DragPreview";
+import { ToastStack } from "../components/board/ToastStack";
 import { LibrarySidebar } from "../components/library/LibrarySidebar";
 import type { DragData } from "../components/board/dndTypes";
+
+function describeAction(
+  presence: PresenceUser[],
+  userId: number,
+  tierId: number,
+  imageId: number,
+  verb: "placed" | "moved" | "removed",
+): string {
+  const actor = presence.find((u) => u.userId === userId)?.displayName ?? "Someone";
+  const tier = useBoardStore.getState().tiers.find((t) => t.id === tierId);
+  const image = useBoardStore.getState().imagesById[imageId];
+  const imageName = image?.originalName ?? "an image";
+  const tierLabel = tier?.label ?? "?";
+  const preposition = verb === "removed" ? "from" : "to";
+  return `${actor} ${verb} ${imageName} ${preposition} ${tierLabel}`;
+}
 
 function resolveDropTarget(overData: DragData): { tierId: number; index: number } | null {
   if (overData.kind === "tier") {
@@ -31,12 +50,16 @@ export function BoardPage() {
   const { boardId: boardIdParam } = useParams<{ boardId: string }>();
   const boardId = Number(boardIdParam);
   const socket = useSocket();
+  const { user } = useAuth();
 
   const board = useBoardStore((state) => state.board);
   const hydrate = useBoardStore((state) => state.hydrate);
   const reset = useBoardStore((state) => state.reset);
   const upsertItem = useBoardStore((state) => state.upsertItem);
   const removeItemLocal = useBoardStore((state) => state.removeItem);
+  const addImage = useBoardStore((state) => state.addImage);
+
+  const addToast = useToastStore((state) => state.addToast);
 
   const setCursor = useCursorStore((state) => state.setCursor);
   const removeCursor = useCursorStore((state) => state.removeCursor);
@@ -44,6 +67,14 @@ export function BoardPage() {
 
   const [presence, setPresence] = useState<PresenceUser[]>([]);
   const [activeDragImage, setActiveDragImage] = useState<ImageAsset | undefined>(undefined);
+
+  // Socket listeners below are only registered once per socket/board, so they
+  // must read presence through a ref rather than closing over the state
+  // directly — otherwise toast messages would use a stale, possibly-empty list.
+  const presenceRef = useRef(presence);
+  useEffect(() => {
+    presenceRef.current = presence;
+  }, [presence]);
 
   useEffect(() => {
     api.get<BoardHydration>(`/boards/${boardId}`).then(hydrate);
@@ -58,13 +89,30 @@ export function BoardPage() {
 
     socket.emit("board:join", { boardId });
 
-    const onPlaced = (item: TierItem) => upsertItem(item);
-    const onMoved = (item: TierItem) => upsertItem(item);
-    const onRemoved = ({ itemId }: { itemId: number }) => removeItemLocal(itemId);
+    const onPlaced = ({ item, image }: TierItemBroadcast) => {
+      addImage(image);
+      upsertItem(item);
+      if (item.placedBy !== user?.id) {
+        addToast(describeAction(presenceRef.current, item.placedBy!, item.tierId, item.imageId, "placed"));
+      }
+    };
+    const onMoved = ({ item, image }: TierItemBroadcast) => {
+      addImage(image);
+      upsertItem(item);
+      if (item.placedBy !== user?.id) {
+        addToast(describeAction(presenceRef.current, item.placedBy!, item.tierId, item.imageId, "moved"));
+      }
+    };
+    const onRemoved = ({ itemId, tierId, imageId, removedBy }: { itemId: number; tierId: number; imageId: number; removedBy: number }) => {
+      removeItemLocal(itemId);
+      if (removedBy !== user?.id) {
+        addToast(describeAction(presenceRef.current, removedBy, tierId, imageId, "removed"));
+      }
+    };
     const onPresenceUpdate = (users: PresenceUser[]) => setPresence(users);
-    const onUserJoined = (user: PresenceUser) => setPresence((prev) => [...prev, user]);
-    const onUserLeft = (user: PresenceUser) =>
-      setPresence((prev) => prev.filter((u) => u.userId !== user.userId));
+    const onUserJoined = (joinedUser: PresenceUser) => setPresence((prev) => [...prev, joinedUser]);
+    const onUserLeft = (leftUser: PresenceUser) =>
+      setPresence((prev) => prev.filter((u) => u.userId !== leftUser.userId));
     const onCursorMoved = setCursor;
     const onCursorLeft = ({ userId }: { userId: number }) => removeCursor(userId);
 
@@ -88,7 +136,7 @@ export function BoardPage() {
       socket.off("cursor:moved", onCursorMoved);
       socket.off("cursor:left", onCursorLeft);
     };
-  }, [socket, boardId, upsertItem, removeItemLocal, setCursor, removeCursor]);
+  }, [socket, boardId, upsertItem, removeItemLocal, addImage, addToast, user?.id, setCursor, removeCursor]);
 
   function handleDragStart(event: DragStartEvent) {
     const data = event.active.data.current as DragData | undefined;
@@ -111,9 +159,6 @@ export function BoardPage() {
     if (!target) return;
 
     if (activeData.kind === "image") {
-      // The board store only learns about images at hydration time; register
-      // this one now so TierItemCard can render it as soon as the server echoes back.
-      useBoardStore.getState().addImage(activeData.image);
       socket.emit("item:place", {
         boardId,
         tierId: target.tierId,
@@ -146,6 +191,7 @@ export function BoardPage() {
           <DragPreview image={activeDragImage} />
         </DragOverlay>
       </DndContext>
+      <ToastStack />
     </div>
   );
 }

@@ -2,6 +2,7 @@ import type { Server } from "socket.io";
 import type { ClientToServerEvents, PresenceUser, ServerToClientEvents } from "@tiermaker/shared";
 import { colorForUser } from "../services/userService.js";
 import { moveItem, placeItem, removeItem } from "../services/tierItemService.js";
+import { getImage } from "../services/imageService.js";
 import type { AppSocket } from "./index.js";
 
 type AppServer = Server<ClientToServerEvents, ServerToClientEvents>;
@@ -48,7 +49,8 @@ export function registerBoardHandlers(io: AppServer, socket: AppSocket) {
   socket.on("item:place", async ({ boardId, tierId, imageId, index }) => {
     try {
       const item = await placeItem({ boardId, tierId, imageId, index, placedBy: socket.request.session.userId! });
-      io.to(roomName(boardId)).emit("item:placed", item);
+      const image = await getImage(item.imageId);
+      if (image) io.to(roomName(boardId)).emit("item:placed", { item, image });
     } catch {
       socket.emit("error", { message: "Failed to place item" });
     }
@@ -57,7 +59,9 @@ export function registerBoardHandlers(io: AppServer, socket: AppSocket) {
   socket.on("item:move", async ({ boardId, itemId, toTierId, index }) => {
     try {
       const item = await moveItem({ itemId, toTierId, index, placedBy: socket.request.session.userId! });
-      if (item) io.to(roomName(boardId)).emit("item:moved", item);
+      if (!item) return;
+      const image = await getImage(item.imageId);
+      if (image) io.to(roomName(boardId)).emit("item:moved", { item, image });
     } catch {
       socket.emit("error", { message: "Failed to move item" });
     }
@@ -65,8 +69,15 @@ export function registerBoardHandlers(io: AppServer, socket: AppSocket) {
 
   socket.on("item:remove", async ({ boardId, itemId }) => {
     try {
-      await removeItem(itemId);
-      io.to(roomName(boardId)).emit("item:removed", { itemId });
+      const removed = await removeItem(itemId);
+      if (removed) {
+        io.to(roomName(boardId)).emit("item:removed", {
+          itemId,
+          tierId: removed.tierId,
+          imageId: removed.imageId,
+          removedBy: socket.request.session.userId!,
+        });
+      }
     } catch {
       socket.emit("error", { message: "Failed to remove item" });
     }

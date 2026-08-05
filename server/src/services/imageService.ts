@@ -19,6 +19,11 @@ export function toImageAsset(row: ImageRow): ImageAsset {
   };
 }
 
+export async function getImage(id: number): Promise<ImageAsset | null> {
+  const [row] = await db.select().from(images).where(eq(images.id, id));
+  return row ? toImageAsset(row) : null;
+}
+
 export async function listImages(folderId: number | null): Promise<ImageAsset[]> {
   const rows =
     folderId === null

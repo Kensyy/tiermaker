@@ -78,6 +78,7 @@ export async function moveItem(input: {
   return row ?? null;
 }
 
-export async function removeItem(itemId: number): Promise<void> {
-  await db.delete(tierItems).where(eq(tierItems.id, itemId));
+export async function removeItem(itemId: number): Promise<TierItemRow | null> {
+  const [row] = await db.delete(tierItems).where(eq(tierItems.id, itemId)).returning();
+  return row ?? null;
 }

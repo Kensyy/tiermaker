@@ -1,4 +1,9 @@
-import type { CursorPosition, PresenceUser, Tier, TierItem } from "./types.js";
+import type { CursorPosition, ImageAsset, PresenceUser, Tier, TierItem } from "./types.js";
+
+export interface TierItemBroadcast {
+  item: TierItem;
+  image: ImageAsset;
+}
 
 export interface ItemPlacePayload {
   boardId: number;
@@ -31,9 +36,9 @@ export interface ServerToClientEvents {
   "presence:update": (users: PresenceUser[]) => void;
   "user:joined": (user: PresenceUser) => void;
   "user:left": (user: PresenceUser) => void;
-  "item:placed": (item: TierItem) => void;
-  "item:moved": (item: TierItem) => void;
-  "item:removed": (payload: { itemId: number }) => void;
+  "item:placed": (payload: TierItemBroadcast) => void;
+  "item:moved": (payload: TierItemBroadcast) => void;
+  "item:removed": (payload: { itemId: number; tierId: number; imageId: number; removedBy: number }) => void;
   "tier:updated": (tier: Tier) => void;
   "cursor:moved": (cursor: CursorPosition) => void;
   "cursor:left": (payload: { userId: number }) => void;
