@@ -3,5 +3,26 @@
 @tailwind utilities;
 
 body {
-  @apply bg-slate-950 text-slate-100;
+  @apply text-neon-text;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(76, 243, 255, 0.08), transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(255, 61, 174, 0.08), transparent 45%),
+    theme("colors.neon.bg");
+  min-height: 100vh;
+}
+
+::selection {
+  background: rgba(76, 243, 255, 0.25);
+}
+
+@layer utilities {
+  .glass {
+    @apply border border-neon-line bg-neon-glass backdrop-blur-md;
+  }
+  .glow-cyan {
+    text-shadow: 0 0 10px rgba(76, 243, 255, 0.55);
+  }
+  .glow-magenta {
+    text-shadow: 0 0 8px rgba(255, 61, 174, 0.5);
+  }
 }

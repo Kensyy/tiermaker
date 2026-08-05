@@ -9,7 +9,7 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div className="flex min-h-screen items-center justify-center text-slate-400">Loading…</div>;
+    return <div className="flex min-h-screen items-center justify-center font-mono text-sm text-neon-muted">Loading…</div>;
   }
   if (!user) {
     return <Navigate to="/login" replace />;

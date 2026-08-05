@@ -17,9 +17,9 @@ export function TierItemCard({ item, image, onRemove }: TierItemCardProps) {
         draggable.setNodeRef(node);
         droppable.setNodeRef(node);
       }}
-      className={`group relative h-20 w-20 shrink-0 touch-none rounded-md border ${
-        droppable.isOver ? "border-indigo-400" : "border-slate-700"
-      } bg-slate-900 ${draggable.isDragging ? "opacity-30" : ""}`}
+      className={`glass group relative h-20 w-20 shrink-0 touch-none rounded-md ${
+        droppable.isOver ? "border-neon-cyan shadow-[0_0_14px_rgba(76,243,255,0.35)]" : ""
+      } ${draggable.isDragging ? "opacity-30" : ""}`}
       {...draggable.listeners}
       {...draggable.attributes}
     >
@@ -38,7 +38,7 @@ export function TierItemCard({ item, image, onRemove }: TierItemCardProps) {
           e.stopPropagation();
           onRemove(item.id);
         }}
-        className="absolute -right-2 -top-2 hidden h-5 w-5 items-center justify-center rounded-full bg-red-600 text-xs text-white group-hover:flex"
+        className="absolute -right-2 -top-2 hidden h-5 w-5 items-center justify-center rounded-full border border-tier-s/60 bg-neon-bg text-xs text-tier-s shadow-[0_0_8px_rgba(255,61,106,0.5)] group-hover:flex"
         aria-label="Remove from tier"
       >
         ×

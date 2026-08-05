@@ -17,7 +17,7 @@ export function FolderTreeNode({ node, depth, selectedFolderId, onSelect }: Fold
     <div>
       <div
         className={`flex cursor-pointer items-center gap-1 rounded px-1 py-1 text-sm ${
-          isSelected ? "bg-indigo-500/20 text-indigo-300" : "text-slate-300 hover:bg-slate-800"
+          isSelected ? "bg-neon-cyan/10 text-neon-cyan" : "text-neon-muted hover:bg-neon-glass"
         }`}
         style={{ paddingLeft: depth * 14 + 4 }}
         onClick={() => onSelect(node.id)}
@@ -29,7 +29,7 @@ export function FolderTreeNode({ node, depth, selectedFolderId, onSelect }: Fold
               e.stopPropagation();
               setExpanded((v) => !v);
             }}
-            className="w-3 shrink-0 text-slate-500"
+            className="w-3 shrink-0 text-neon-muted"
           >
             {expanded ? "▾" : "▸"}
           </button>

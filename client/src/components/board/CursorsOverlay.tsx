@@ -8,16 +8,16 @@ export function CursorsOverlay() {
       {Object.values(cursors).map((cursor) => (
         <div
           key={cursor.userId}
-          className="absolute flex items-center gap-1 transition-[left,top] duration-75 ease-linear"
+          className="absolute flex items-center gap-1.5 transition-[left,top] duration-75 ease-linear"
           style={{ left: cursor.x, top: cursor.y }}
         >
           <div
-            className="h-3 w-3 rotate-12 rounded-sm"
-            style={{ backgroundColor: cursor.color }}
+            className="h-2.5 w-2.5 rounded-full"
+            style={{ backgroundColor: cursor.color, boxShadow: `0 0 8px 2px ${cursor.color}` }}
           />
           <span
-            className="whitespace-nowrap rounded px-1.5 py-0.5 text-xs font-medium text-white"
-            style={{ backgroundColor: cursor.color }}
+            className="glass whitespace-nowrap rounded px-1.5 py-0.5 font-mono text-[10px] tracking-wide"
+            style={{ color: cursor.color, textShadow: `0 0 6px ${cursor.color}80` }}
           >
             {cursor.displayName}
           </span>

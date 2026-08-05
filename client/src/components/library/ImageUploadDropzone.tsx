@@ -31,7 +31,7 @@ export function ImageUploadDropzone({ folderId, onUploaded }: ImageUploadDropzon
   }
 
   return (
-    <div className="border-t border-slate-800 p-2">
+    <div className="border-t border-neon-line p-2">
       <input
         ref={inputRef}
         type="file"

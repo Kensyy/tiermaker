@@ -9,7 +9,7 @@ function LibraryThumbnail({ image }: { image: ImageAsset }) {
   return (
     <div
       ref={draggable.setNodeRef}
-      className={`h-16 w-16 shrink-0 touch-none rounded-md border border-slate-700 bg-slate-900 ${
+      className={`h-16 w-16 shrink-0 touch-none rounded-md border border-neon-line bg-neon-glass ${
         draggable.isDragging ? "opacity-30" : ""
       }`}
       {...draggable.listeners}
@@ -34,7 +34,7 @@ export function ImageGrid({ folderId, refreshToken }: ImageGridProps) {
   }, [folderId, refreshToken]);
 
   if (images.length === 0) {
-    return <p className="p-3 text-xs text-slate-500">No images in this folder yet.</p>;
+    return <p className="p-3 font-mono text-xs text-neon-muted">No images in this folder yet.</p>;
   }
 
   return (

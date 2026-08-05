@@ -8,7 +8,7 @@ export function LibrarySidebar() {
   const [refreshToken, setRefreshToken] = useState(0);
 
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-l border-slate-800 bg-slate-950">
+    <aside className="flex w-64 shrink-0 flex-col border-l border-neon-line bg-neon-glass backdrop-blur-md">
       <FolderTree selectedFolderId={selectedFolderId} onSelect={setSelectedFolderId} />
       <div className="flex-1 overflow-y-auto">
         <ImageGrid folderId={selectedFolderId} refreshToken={refreshToken} />

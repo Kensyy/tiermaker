@@ -22,17 +22,17 @@ export function TierRow({ tier, onRemoveItem }: TierRowProps) {
   const droppable = useDroppable({ id: `tier-${tier.id}`, data: { kind: "tier", tierId: tier.id } });
 
   return (
-    <div className="flex border-b border-slate-800">
+    <div className="flex border-b border-neon-line">
       <div
-        className="flex w-20 shrink-0 items-center justify-center text-xl font-bold text-slate-950"
-        style={{ backgroundColor: tier.color }}
+        className="flex w-14 shrink-0 items-center justify-center bg-neon-glass font-mono text-lg"
+        style={{ color: tier.color, textShadow: `0 0 12px ${tier.color}99` }}
       >
         {tier.label}
       </div>
       <div
         ref={droppable.setNodeRef}
-        className={`flex min-h-24 flex-1 flex-wrap items-center gap-2 p-2 ${
-          droppable.isOver ? "bg-slate-800/60" : ""
+        className={`flex min-h-24 flex-1 flex-wrap items-center gap-2 p-2 transition-colors ${
+          droppable.isOver ? "bg-neon-cyan/[0.06] shadow-[0_0_20px_rgba(76,243,255,0.08)_inset]" : ""
         }`}
       >
         {items.map((item) => (

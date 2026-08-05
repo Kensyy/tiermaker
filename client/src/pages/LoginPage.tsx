@@ -29,10 +29,10 @@ export function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center px-4">
-      <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-4">
+      <form onSubmit={handleSubmit} className="glass w-full max-w-sm space-y-5 rounded-lg p-8 shadow-[0_0_50px_rgba(76,243,255,0.06)]">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Tiermaker</h1>
-          <p className="mt-1 text-sm text-slate-400">
+          <h1 className="glow-cyan font-mono text-lg uppercase tracking-[0.15em] text-neon-cyan">Tiermaker</h1>
+          <p className="mt-2 text-sm leading-relaxed text-neon-muted">
             Pick a name and a passcode. First time here? This creates your account.
           </p>
         </div>
@@ -57,7 +57,7 @@ export function LoginPage() {
           />
         </div>
 
-        {error && <p className="text-sm text-red-400">{error}</p>}
+        {error && <p className="font-mono text-xs text-tier-s">{error}</p>}
 
         <Button type="submit" className="w-full" disabled={submitting}>
           {submitting ? "Signing in…" : "Continue"}

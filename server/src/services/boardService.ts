@@ -5,12 +5,12 @@ import type { BoardHydration } from "@tiermaker/shared";
 import { toImageAsset } from "./imageService.js";
 
 const DEFAULT_TIERS: { label: string; color: string }[] = [
-  { label: "S", color: "#f87171" },
-  { label: "A", color: "#fb923c" },
-  { label: "B", color: "#facc15" },
-  { label: "C", color: "#4ade80" },
-  { label: "D", color: "#60a5fa" },
-  { label: "F", color: "#a78bfa" },
+  { label: "S", color: "#ff3d6a" },
+  { label: "A", color: "#ff9d3d" },
+  { label: "B", color: "#f5e14c" },
+  { label: "C", color: "#4cf3a0" },
+  { label: "D", color: "#4c9bf5" },
+  { label: "F", color: "#b34cf5" },
 ];
 
 export async function listBoards() {

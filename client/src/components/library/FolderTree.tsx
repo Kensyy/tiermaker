@@ -31,21 +31,21 @@ export function FolderTree({ selectedFolderId, onSelect }: FolderTreeProps) {
   }
 
   return (
-    <div className="border-b border-slate-800 p-2">
+    <div className="border-b border-neon-line p-2">
       <div className="mb-1 flex items-center justify-between px-1">
-        <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Folders</span>
+        <span className="font-mono text-[10px] uppercase tracking-widest text-neon-magenta">// folders</span>
         <button
           type="button"
           onClick={() => setCreating((v) => !v)}
-          className="text-xs text-indigo-400 hover:text-indigo-300"
+          className="font-mono text-xs text-neon-cyan hover:text-neon-cyan/80"
         >
-          + New
+          + new
         </button>
       </div>
 
       <div
         className={`cursor-pointer rounded px-2 py-1 text-sm ${
-          selectedFolderId === null ? "bg-indigo-500/20 text-indigo-300" : "text-slate-300 hover:bg-slate-800"
+          selectedFolderId === null ? "bg-neon-cyan/10 text-neon-cyan" : "text-neon-muted hover:bg-neon-glass"
         }`}
         onClick={() => onSelect(null)}
       >

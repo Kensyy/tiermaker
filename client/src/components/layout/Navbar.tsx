@@ -6,14 +6,14 @@ export function Navbar() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="flex items-center justify-between border-b border-slate-800 px-4 py-3">
-      <Link to="/" className="text-lg font-bold text-slate-100">
+    <header className="glass flex items-center justify-between px-4 py-3">
+      <Link to="/" className="glow-cyan font-mono text-sm uppercase tracking-[0.15em] text-neon-cyan">
         Tiermaker
       </Link>
       {user && (
-        <div className="flex items-center gap-3 text-sm text-slate-300">
+        <div className="flex items-center gap-3 font-mono text-xs text-neon-muted">
           <span>{user.displayName}</span>
-          <Button variant="secondary" onClick={() => logout()}>
+          <Button variant="secondary" onClick={() => logout()} className="py-1.5">
             Log out
           </Button>
         </div>

@@ -4,7 +4,7 @@ export function DragPreview({ image }: { image: ImageAsset | undefined }) {
   if (!image) return null;
 
   return (
-    <div className="h-20 w-20 rotate-3 cursor-grabbing rounded-md border border-indigo-400 bg-slate-900 shadow-xl">
+    <div className="glass h-20 w-20 cursor-grabbing rounded-md border-neon-cyan shadow-[0_0_24px_rgba(76,243,255,0.4)]">
       <img
         src={image.url}
         alt={image.originalName}

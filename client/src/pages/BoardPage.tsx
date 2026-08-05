@@ -133,8 +133,8 @@ export function BoardPage() {
   return (
     <div className="flex h-screen flex-col">
       <Navbar />
-      <div className="flex items-center justify-between border-b border-slate-800 px-4 py-2">
-        <h1 className="text-lg font-semibold text-slate-100">{board?.name ?? "Loading…"}</h1>
+      <div className="glass flex items-center justify-between px-4 py-2">
+        <h1 className="font-mono text-sm text-neon-muted">{board?.name ?? "Loading…"}</h1>
         <PresenceBar users={presence} />
       </div>
       <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setActiveDragImage(undefined)}>

@@ -40,21 +40,21 @@ export function LobbyPage() {
       <Navbar />
       <main className="mx-auto max-w-3xl px-4 py-8">
         <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-slate-100">Boards</h1>
+          <h1 className="glow-magenta font-mono text-xs uppercase tracking-[0.15em] text-neon-magenta">Boards</h1>
           <Button onClick={() => setModalOpen(true)}>New board</Button>
         </div>
 
         {loading ? (
-          <p className="text-slate-400">Loading…</p>
+          <p className="font-mono text-sm text-neon-muted">Loading…</p>
         ) : boards.length === 0 ? (
-          <p className="text-slate-400">No boards yet. Create the first one.</p>
+          <p className="font-mono text-sm text-neon-muted">No boards yet. Create the first one.</p>
         ) : (
           <ul className="space-y-2">
             {boards.map((board) => (
               <li key={board.id}>
                 <Link
                   to={`/boards/${board.id}`}
-                  className="block rounded-md border border-slate-800 bg-slate-900 px-4 py-3 text-slate-100 transition-colors hover:border-indigo-500"
+                  className="glass block rounded-md px-4 py-3 text-neon-text transition-colors hover:border-neon-cyan/60 hover:shadow-[0_0_16px_rgba(76,243,255,0.15)]"
                 >
                   {board.name}
                 </Link>
