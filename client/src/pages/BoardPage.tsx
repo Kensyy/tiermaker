@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { DndContext, type DragEndEvent } from "@dnd-kit/core";
-import type { BoardHydration, PresenceUser, TierItem } from "@tiermaker/shared";
+import { DndContext, DragOverlay, type DragEndEvent, type DragStartEvent } from "@dnd-kit/core";
+import type { BoardHydration, ImageAsset, PresenceUser, TierItem } from "@tiermaker/shared";
 import { api } from "../lib/api";
 import { useSocket } from "../context/SocketContext";
 import { useBoardStore } from "../state/useBoardStore";
@@ -9,6 +9,7 @@ import { useCursorStore } from "../state/useCursorStore";
 import { Navbar } from "../components/layout/Navbar";
 import { BoardCanvas } from "../components/board/BoardCanvas";
 import { PresenceBar } from "../components/board/PresenceBar";
+import { DragPreview } from "../components/board/DragPreview";
 import { LibrarySidebar } from "../components/library/LibrarySidebar";
 import type { DragData } from "../components/board/dndTypes";
 
@@ -42,6 +43,7 @@ export function BoardPage() {
   const resetCursors = useCursorStore((state) => state.reset);
 
   const [presence, setPresence] = useState<PresenceUser[]>([]);
+  const [activeDragImage, setActiveDragImage] = useState<ImageAsset | undefined>(undefined);
 
   useEffect(() => {
     api.get<BoardHydration>(`/boards/${boardId}`).then(hydrate);
@@ -88,7 +90,18 @@ export function BoardPage() {
     };
   }, [socket, boardId, upsertItem, removeItemLocal, setCursor, removeCursor]);
 
+  function handleDragStart(event: DragStartEvent) {
+    const data = event.active.data.current as DragData | undefined;
+    if (!data) return;
+    if (data.kind === "image") {
+      setActiveDragImage(data.image);
+    } else if (data.kind === "item") {
+      setActiveDragImage(useBoardStore.getState().imagesById[data.item.imageId]);
+    }
+  }
+
   function handleDragEnd(event: DragEndEvent) {
+    setActiveDragImage(undefined);
     if (!socket) return;
     const activeData = event.active.data.current as DragData | undefined;
     const overData = event.over?.data.current as DragData | undefined;
@@ -124,11 +137,14 @@ export function BoardPage() {
         <h1 className="text-lg font-semibold text-slate-100">{board?.name ?? "Loading…"}</h1>
         <PresenceBar users={presence} />
       </div>
-      <DndContext onDragEnd={handleDragEnd}>
+      <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setActiveDragImage(undefined)}>
         <div className="flex flex-1 overflow-hidden">
           <BoardCanvas />
           <LibrarySidebar />
         </div>
+        <DragOverlay>
+          <DragPreview image={activeDragImage} />
+        </DragOverlay>
       </DndContext>
     </div>
   );

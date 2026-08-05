@@ -1,20 +1,17 @@
 import { useEffect, useState } from "react";
 import { useDraggable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
 import type { ImageAsset } from "@tiermaker/shared";
 import { api } from "../../lib/api";
 
 function LibraryThumbnail({ image }: { image: ImageAsset }) {
   const draggable = useDraggable({ id: `image-${image.id}`, data: { kind: "image", image } });
-  const style = draggable.transform
-    ? { transform: CSS.Translate.toString(draggable.transform) }
-    : undefined;
 
   return (
     <div
       ref={draggable.setNodeRef}
-      style={style}
-      className="h-16 w-16 shrink-0 touch-none rounded-md border border-slate-700 bg-slate-900"
+      className={`h-16 w-16 shrink-0 touch-none rounded-md border border-slate-700 bg-slate-900 ${
+        draggable.isDragging ? "opacity-30" : ""
+      }`}
       {...draggable.listeners}
       {...draggable.attributes}
     >

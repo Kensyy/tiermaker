@@ -1,5 +1,4 @@
 import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { CSS } from "@dnd-kit/utilities";
 import type { ImageAsset, TierItem } from "@tiermaker/shared";
 
 interface TierItemCardProps {
@@ -12,20 +11,15 @@ export function TierItemCard({ item, image, onRemove }: TierItemCardProps) {
   const draggable = useDraggable({ id: `item-${item.id}`, data: { kind: "item", item } });
   const droppable = useDroppable({ id: `item-${item.id}`, data: { kind: "item", item } });
 
-  const style = draggable.transform
-    ? { transform: CSS.Translate.toString(draggable.transform) }
-    : undefined;
-
   return (
     <div
       ref={(node) => {
         draggable.setNodeRef(node);
         droppable.setNodeRef(node);
       }}
-      style={style}
       className={`group relative h-20 w-20 shrink-0 touch-none rounded-md border ${
         droppable.isOver ? "border-indigo-400" : "border-slate-700"
-      } bg-slate-900`}
+      } bg-slate-900 ${draggable.isDragging ? "opacity-30" : ""}`}
       {...draggable.listeners}
       {...draggable.attributes}
     >
