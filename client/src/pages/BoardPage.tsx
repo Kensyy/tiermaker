@@ -5,6 +5,7 @@ import type { BoardHydration, PresenceUser, TierItem } from "@tiermaker/shared";
 import { api } from "../lib/api";
 import { useSocket } from "../context/SocketContext";
 import { useBoardStore } from "../state/useBoardStore";
+import { useCursorStore } from "../state/useCursorStore";
 import { Navbar } from "../components/layout/Navbar";
 import { BoardCanvas } from "../components/board/BoardCanvas";
 import { PresenceBar } from "../components/board/PresenceBar";
@@ -36,14 +37,19 @@ export function BoardPage() {
   const upsertItem = useBoardStore((state) => state.upsertItem);
   const removeItemLocal = useBoardStore((state) => state.removeItem);
 
+  const setCursor = useCursorStore((state) => state.setCursor);
+  const removeCursor = useCursorStore((state) => state.removeCursor);
+  const resetCursors = useCursorStore((state) => state.reset);
+
   const [presence, setPresence] = useState<PresenceUser[]>([]);
 
   useEffect(() => {
     api.get<BoardHydration>(`/boards/${boardId}`).then(hydrate);
     return () => {
       reset();
+      resetCursors();
     };
-  }, [boardId, hydrate, reset]);
+  }, [boardId, hydrate, reset, resetCursors]);
 
   useEffect(() => {
     if (!socket) return;
@@ -57,6 +63,8 @@ export function BoardPage() {
     const onUserJoined = (user: PresenceUser) => setPresence((prev) => [...prev, user]);
     const onUserLeft = (user: PresenceUser) =>
       setPresence((prev) => prev.filter((u) => u.userId !== user.userId));
+    const onCursorMoved = setCursor;
+    const onCursorLeft = ({ userId }: { userId: number }) => removeCursor(userId);
 
     socket.on("item:placed", onPlaced);
     socket.on("item:moved", onMoved);
@@ -64,6 +72,8 @@ export function BoardPage() {
     socket.on("presence:update", onPresenceUpdate);
     socket.on("user:joined", onUserJoined);
     socket.on("user:left", onUserLeft);
+    socket.on("cursor:moved", onCursorMoved);
+    socket.on("cursor:left", onCursorLeft);
 
     return () => {
       socket.emit("board:leave", { boardId });
@@ -73,8 +83,10 @@ export function BoardPage() {
       socket.off("presence:update", onPresenceUpdate);
       socket.off("user:joined", onUserJoined);
       socket.off("user:left", onUserLeft);
+      socket.off("cursor:moved", onCursorMoved);
+      socket.off("cursor:left", onCursorLeft);
     };
-  }, [socket, boardId, upsertItem, removeItemLocal]);
+  }, [socket, boardId, upsertItem, removeItemLocal, setCursor, removeCursor]);
 
   function handleDragEnd(event: DragEndEvent) {
     if (!socket) return;
